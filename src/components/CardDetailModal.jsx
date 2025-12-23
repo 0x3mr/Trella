@@ -6,8 +6,11 @@ export default function CardDetailModal({ card, onClose, onSave }) {
 
   useEffect(() => {
     if (card) {
-      setTitle(card.title);
-      setDescription(card.description);
+      const id = setTimeout(() => {
+        setTitle(card.title);
+        setDescription(card.description);
+      }, 0);
+      return () => clearTimeout(id);
     }
   }, [card]);
 

@@ -5,7 +5,8 @@ A collaborative, offline-first Kanban board built with React, featuring drag-and
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+ 
+
+- Node.js 18+
 - npm or yarn
 
 ### Installation
@@ -73,6 +74,7 @@ trella/
 ## ✨ Features
 
 ### Core Functionality
+
 - ✅ **Lists Management**: Create, rename, and archive lists
 - ✅ **Cards Management**: Add, edit, delete cards with title, description, and tags
 - ✅ **Drag & Drop**: Reorder cards within lists and move between lists using @dnd-kit
@@ -82,6 +84,7 @@ trella/
 - ✅ **Undo/Redo**: Multi-level history with Ctrl+Z / Ctrl+Shift+Z shortcuts
 
 ### Technical Features
+
 - ✅ **State Management**: useReducer + Context API
 - ✅ **Persistence**: localStorage for offline data
 - ✅ **Sync Queue**: Background sync with retry logic
@@ -90,6 +93,7 @@ trella/
 - ✅ **Mock Server**: MSW for simulating API with delays/failures
 
 ### Accessibility
+
 - ✅ **Keyboard Navigation**: Full keyboard support for all operations
 - ✅ **Focus Management**: Focus trapping in modals
 - ✅ **ARIA Labels**: Comprehensive ARIA attributes

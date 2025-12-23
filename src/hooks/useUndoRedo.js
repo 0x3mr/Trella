@@ -14,5 +14,10 @@ export function useUndoRedo() {
     dispatch({ type: "REDO" });
   }, [state.future, dispatch]);
 
-  return { undo, redo, canUndo: state.history.length > 0, canRedo: state.future.length > 0 };
+  return {
+    undo,
+    redo,
+    canUndo: state.history.length > 0,
+    canRedo: state.future.length > 0,
+  };
 }

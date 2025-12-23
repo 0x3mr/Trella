@@ -7,7 +7,8 @@ Trella's architecture follows a unidirectional data flow pattern with centralize
 ## Component Hierarchy
 
 The component tree follows a strict hierarchy:
-- `App.jsx` (root) wraps everything in `BoardProvider` 
+
+- `App.jsx` (root) wraps everything in `BoardProvider`
 - `Header.jsx` displays sync status and undo/redo controls
 - `Toolbar.jsx` handles list creation
 - `Board.jsx` manages drag-and-drop context and coordinates between lists
@@ -27,6 +28,7 @@ User interactions trigger callbacks in components → callbacks dispatch actions
 ## Folder Structure Rationale
 
 The structure separates concerns clearly:
+
 - `components/` contains presentational React components
 - `context/` holds global state logic (provider + reducer)
 - `hooks/` provides reusable custom hooks that encapsulate complex logic

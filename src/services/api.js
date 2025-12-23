@@ -6,9 +6,7 @@ let serverState = {
 
 // Utility: random delay to simulate network latency
 function randomDelay() {
-  return new Promise((res) =>
-    setTimeout(res, 300 + Math.random() * 700)
-  );
+  return new Promise((res) => setTimeout(res, 300 + Math.random() * 700));
 }
 
 // Utility: randomly fail 15% of requests
@@ -68,9 +66,7 @@ export async function syncOperation(operation) {
 
     case "UPDATE_CARD": {
       // Find the card in serverState.cards
-      const serverCard = serverState.cards.find(
-        (c) => c.id === payload.cardId
-      );
+      const serverCard = serverState.cards.find((c) => c.id === payload.cardId);
       if (!serverCard) break;
 
       // Conflict detection: check if server version > baseVersion
@@ -96,7 +92,7 @@ export async function syncOperation(operation) {
         list.cards = list.cards.filter((c) => c.id !== payload.cardId);
       }
       serverState.cards = serverState.cards.filter(
-        (c) => c.id !== payload.cardId
+        (c) => c.id !== payload.cardId,
       );
       break;
     }

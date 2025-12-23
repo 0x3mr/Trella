@@ -1,7 +1,10 @@
 import { useBoardState } from "../hooks/useBoardState";
 import Card from "./Card";
 import InlineEditor from "./InlineEditor";
-import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import { useDroppable } from "@dnd-kit/core";
 
 export default function ListColumn({ list }) {
@@ -12,26 +15,16 @@ export default function ListColumn({ list }) {
   });
 
   return (
-    <div
-      ref={setNodeRef}
-      className="bg-white rounded shadow w-72 p-3"
-    >
-      <InlineEditor
-        value={list.title}
-        onSave={(t) => renameList(list.id, t)}
-      />
+    <div ref={setNodeRef} className="bg-white rounded shadow w-72 p-3">
+      <InlineEditor value={list.title} onSave={(t) => renameList(list.id, t)} />
 
       <SortableContext
-        items={list.cards.map(c => `${list.id}:${c.id}`)}
+        items={list.cards.map((c) => `${list.id}:${c.id}`)}
         strategy={verticalListSortingStrategy}
       >
         <div className="space-y-2 mt-2 min-h-[20px]">
-          {list.cards.map(card => (
-            <Card
-              key={card.id}
-              card={card}
-              listId={list.id}
-            />
+          {list.cards.map((card) => (
+            <Card key={card.id} card={card} listId={list.id} />
           ))}
         </div>
       </SortableContext>

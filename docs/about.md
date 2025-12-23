@@ -5,25 +5,30 @@
 ### Basic Operations
 
 **Add a List**:
+
 1. Click "+ Add List" button
 2. Type list title
 3. Press Enter or click outside
 
 **Add a Card**:
+
 1. Click "+ Add a card" in any list
 2. Enter card title
 3. Press Enter
 
 **Edit a Card**:
+
 1. Click on any card
 2. Modal opens with title, description, and tags
 3. Make changes and click "Save"
 
 **Move a Card**:
+
 - **Mouse**: Drag and drop cards
 - **Keyboard**: Tab to card → Space to pick up → Arrow keys to move → Space to drop
 
 **Undo/Redo**:
+
 - Ctrl+Z (or Cmd+Z) to undo
 - Ctrl+Shift+Z (or Cmd+Shift+Z) to redo
 
@@ -51,12 +56,15 @@ npm run e2e          # Run E2E tests (to be implemented)
 ## 🏗️ Architecture
 
 ### State Management
+
 All board data flows through a central `boardReducer` with 15 action types. The `BoardProvider` wraps the app and provides state + dispatch via Context API. Components use `useBoardState` hook for clean API access.
 
 ### Data Persistence
+
 Every state change is saved to localStorage. On app load, data is restored from localStorage. This enables full offline functionality.
 
 ### Sync Strategy
+
 1. User action → Instant UI update (optimistic)
 2. Operation queued in sync queue
 3. Background sync attempts when online
@@ -65,7 +73,9 @@ Every state change is saved to localStorage. On app load, data is restored from 
 6. Server data merged using three-way merge algorithm
 
 ### Conflict Resolution
+
 When local and server versions conflict:
+
 1. Compare base (last known), local, and server versions
 2. If both modified same field → conflict detected
 3. Auto-resolve when possible
@@ -94,5 +104,6 @@ npm run e2e
 ## 📚 Documentation
 
 Detailed essays in `docs/` directory:
+
 - **architecture.md**: System design and component hierarchy
 - **about.md**: General information about the board

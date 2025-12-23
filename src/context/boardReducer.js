@@ -3,19 +3,10 @@ import { arrayMove } from "@dnd-kit/sortable";
 
 export const initialState = {
   lists: [],
-  cards: [],
   history: [],
   future: [],
-  pendingQueue: []
+  pendingQueue: [],
 };
-
-function withHistory(state, next) {
-  return {
-    ...next,
-    history: [...state.history, state],
-    future: []
-  };
-}
 
 export function boardReducer(state, action) {
   switch (action.type) {
@@ -48,7 +39,7 @@ export function boardReducer(state, action) {
                 version: l.version + 1,
                 lastModifiedAt: Date.now(),
               }
-            : l
+            : l,
         ),
       };
       return pushHistory(state, newState);
@@ -73,7 +64,96 @@ export function boardReducer(state, action) {
                   },
                 ],
               }
-            : l
+            : l,
+        ),
+      };
+      return pushHistory(state, newState);
+    }
+
+    case "UPDATE_CARD": {
+      const { cardId, listId, updates } = action.payload;
+
+      const newState = {
+        ...state,
+        lists: state.lists.map((l) =>
+          l.id === listId
+            ? {
+                ...l,
+                cards: l.cards.map((c) =>
+                  c.id === cardId
+                    ? {
+                        ...c,
+                        ...updates,
+                        version: c.version + 1,
+                        lastModifiedAt: Date.now(),
+                      }
+                    : c,
+                ),
+              }
+            : l,
+        ),
+      };
+      return pushHistory(state, newState);
+    }
+
+    case "DELETE_CARD": {
+      const { cardId, listId } = action.payload;
+
+      const newState = {
+        ...state,
+        lists: state.lists.map((l) =>
+          l.id === listId
+            ? { ...l, cards: l.cards.filter((c) => c.id !== cardId) }
+            : l,
+        ),
+      };
+      return pushHistory(state, newState);
+    }
+
+    case "MOVE_CARD": {
+      const { fromList, toList, cardId, toIndex } = action.payload;
+      const sourceList = state.lists.find((l) => l.id === fromList);
+      if (!sourceList) return state;
+
+      const fromIndex = sourceList.cards.findIndex((c) => c.id === cardId);
+      if (fromIndex === -1) return state;
+
+      // SAME LIST REORDER
+      if (fromList === toList) {
+        if (fromIndex === toIndex) return state;
+
+        const newLists = state.lists.map((l) =>
+          l.id !== fromList
+            ? l
+            : { ...l, cards: arrayMove(l.cards, fromIndex, toIndex) },
+        );
+
+        return pushHistory(state, { ...state, lists: newLists });
+      }
+
+      // CROSS LIST MOVE
+      const card = sourceList.cards[fromIndex];
+
+      const newLists = state.lists.map((l) => {
+        if (l.id === fromList) {
+          return { ...l, cards: l.cards.filter((c) => c.id !== cardId) };
+        }
+        if (l.id === toList) {
+          const cards = [...l.cards];
+          cards.splice(toIndex, 0, card);
+          return { ...l, cards };
+        }
+        return l;
+      });
+
+      return pushHistory(state, { ...state, lists: newLists });
+    }
+
+    case "ARCHIVE_LIST": {
+      const newState = {
+        ...state,
+        lists: state.lists.map((l) =>
+          l.id === action.payload ? { ...l, archived: true } : l,
         ),
       };
       return pushHistory(state, newState);
@@ -99,115 +179,13 @@ export function boardReducer(state, action) {
       };
     }
 
-    case "UPDATE_CARD": {
-    const { cardId, listId, updates } = action.payload;
-
-    const newState = {
-        ...state,
-        lists: state.lists.map((l) =>
-        l.id === listId
-            ? {
-                ...l,
-                cards: l.cards.map((c) =>
-                c.id === cardId
-                    ? {
-                        ...c,
-                        ...updates,
-                        version: c.version + 1,
-                        lastModifiedAt: Date.now(),
-                    }
-                    : c
-                ),
-            }
-            : l
-        ),
-    };
-    return pushHistory(state, newState);
-    }
-
-    case "DELETE_CARD": {
-    const { cardId, listId } = action.payload;
-
-    const newState = {
-        ...state,
-        lists: state.lists.map((l) =>
-        l.id === listId
-            ? { ...l, cards: l.cards.filter((c) => c.id !== cardId) }
-            : l
-        ),
-    };
-    return pushHistory(state, newState);
-    }
-
-case "MOVE_CARD": {
-  const { fromList, toList, cardId, toIndex } = action.payload;
-
-  const sourceList = state.lists.find(l => l.id === fromList);
-  if (!sourceList) return state;
-
-  const fromIndex = sourceList.cards.findIndex(c => c.id === cardId);
-  if (fromIndex === -1) return state;
-
-  // SAME LIST REORDER
-  if (fromList === toList) {
-    if (fromIndex === toIndex) return state;
-
-    const newLists = state.lists.map(l => {
-      if (l.id !== fromList) return l;
-
-      return {
-        ...l,
-        cards: arrayMove(l.cards, fromIndex, toIndex),
-      };
-    });
-
-    return pushHistory(state, { ...state, lists: newLists });
-  }
-
-  // CROSS LIST MOVE
-  const card = sourceList.cards[fromIndex];
-
-  const newLists = state.lists.map(l => {
-    if (l.id === fromList) {
-      return {
-        ...l,
-        cards: l.cards.filter(c => c.id !== cardId),
-      };
-    }
-
-    if (l.id === toList) {
-      const cards = [...l.cards];
-      cards.splice(toIndex, 0, card);
-      return { ...l, cards };
-    }
-
-    return l;
-  });
-
-  return pushHistory(state, { ...state, lists: newLists });
-}
-
-
-
-    case "ARCHIVE_LIST": {
-    const newState = {
-        ...state,
-        lists: state.lists.map((l) =>
-        l.id === action.payload
-            ? { ...l, archived: true }
-            : l
-        ),
-    };
-    return pushHistory(state, newState);
-    }
-
     default:
       return state;
   }
 }
 
 function stripHistory(state) {
-  const { history, future, ...rest } = state;
+  const { ...rest } = state;
   return rest;
 }
 

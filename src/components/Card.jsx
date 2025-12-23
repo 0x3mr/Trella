@@ -12,15 +12,10 @@ function Card({ card, listId }) {
   const [open, setOpen] = useState(false);
   const [confirm, setConfirm] = useState(false);
 
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-  } = useSortable({
-    id: `${listId}:${card.id}`,
-  });
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({
+      id: `${listId}:${card.id}`,
+    });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -29,7 +24,7 @@ function Card({ card, listId }) {
 
   const save = useCallback(
     (updates) => updateCard(listId, card.id, updates),
-    [listId, card.id, updateCard]
+    [listId, card.id, updateCard],
   );
 
   return (
@@ -50,10 +45,7 @@ function Card({ card, listId }) {
         </div>
 
         {/* Clickable Content */}
-        <div
-          className="flex-1 cursor-pointer"
-          onClick={() => setOpen(true)}
-        >
+        <div className="flex-1 cursor-pointer" onClick={() => setOpen(true)}>
           <div className="font-medium">{card.title}</div>
 
           {card.description && (

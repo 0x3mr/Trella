@@ -13,7 +13,11 @@
   --color-blue-500: #3b82f6;
 
   /* Accents & Gradients */
-  --background-image-gradient-primary: linear-gradient(135deg, #7c3aed, #d946ef);
+  --background-image-gradient-primary: linear-gradient(
+    135deg,
+    #7c3aed,
+    #d946ef
+  );
 
   /* Text */
   --color-text-primary: #0f172a;

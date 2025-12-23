@@ -1,14 +1,11 @@
-import { createContext, useReducer, useEffect } from "react";
+import { useReducer, useEffect } from "react";
+import BoardContext from "./BoardContext";
 import { boardReducer, initialState } from "./boardReducer";
 import { loadState, saveState } from "../storage/storage";
 
-export const BoardContext = createContext(null);
-
 export function BoardProvider({ children }) {
-  const [state, dispatch] = useReducer(
-    boardReducer,
-    initialState,
-    (init) => loadState(init)
+  const [state, dispatch] = useReducer(boardReducer, initialState, (init) =>
+    loadState(init),
   );
 
   useEffect(() => {
