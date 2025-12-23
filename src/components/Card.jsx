@@ -1,30 +1,108 @@
-import { memo } from "react";
+import React, { useState, useCallback, Suspense } from "react";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { useBoardState } from "../hooks/useBoardState";
 
-function Card({ card, index, listId }) {
-  function onDragStart(e) {
-    e.dataTransfer.setData(
-      "application/json",
-      JSON.stringify({ cardId: card.id, fromListId: listId, fromIndex: index })
-    );
-  }
+// Lazy-load heavy components
+const CardDetailModal = React.lazy(() => import("./CardDetailModal"));
+const ConfirmDialog = React.lazy(() => import("./ConfirmDialog"));
+
+function Card({ card, listId }) {
+  const { updateCard, deleteCard } = useBoardState();
+  const [open, setOpen] = useState(false);
+  const [confirm, setConfirm] = useState(false);
+
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+  } = useSortable({
+    id: `${listId}:${card.id}`,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  const save = useCallback(
+    (updates) => updateCard(listId, card.id, updates),
+    [listId, card.id, updateCard]
+  );
 
   return (
-    <div
-      draggable
-      onDragStart={onDragStart}
-      className="bg-white rounded-lg border border-slate-200 shadow-sm p-3 cursor-grab hover:shadow-md transition"
-    >
-      <h3 className="font-medium text-slate-800">{card.title}</h3>
-      {card.description && <p className="text-sm text-slate-500 mt-1">{card.description}</p>}
-      {card.tags?.length > 0 && (
-        <div className="flex flex-wrap gap-1 mt-2">
-          {card.tags.map((tag) => (
-            <span key={tag} className="text-xs bg-violet-100 text-violet-800 px-2 py-0.5 rounded">{tag}</span>
-          ))}
+    <>
+      <div
+        ref={setNodeRef}
+        style={style}
+        className="bg-gray-100 rounded p-2 flex gap-2"
+      >
+        {/* Drag Handle */}
+        <div
+          {...attributes}
+          {...listeners}
+          className="cursor-grab select-none text-gray-400"
+          title="Drag"
+        >
+          ☰
         </div>
-      )}
-    </div>
+
+        {/* Clickable Content */}
+        <div
+          className="flex-1 cursor-pointer"
+          onClick={() => setOpen(true)}
+        >
+          <div className="font-medium">{card.title}</div>
+
+          {card.description && (
+            <div className="text-xs text-gray-600 mt-1 line-clamp-2">
+              {card.description}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Lazy-loaded Modal */}
+      <Suspense
+        fallback={
+          open && (
+            <div className="fixed inset-0 flex items-center justify-center bg-black/40 text-white">
+              Loading card details...
+            </div>
+          )
+        }
+      >
+        {open && (
+          <CardDetailModal
+            card={card}
+            onClose={() => setOpen(false)}
+            onSave={save}
+          />
+        )}
+      </Suspense>
+
+      {/* Lazy-loaded Confirm Dialog */}
+      <Suspense
+        fallback={
+          confirm && (
+            <div className="fixed inset-0 flex items-center justify-center bg-black/40 text-white">
+              Loading confirmation...
+            </div>
+          )
+        }
+      >
+        {confirm && (
+          <ConfirmDialog
+            open={confirm}
+            onCancel={() => setConfirm(false)}
+            onConfirm={() => deleteCard(listId, card.id)}
+          />
+        )}
+      </Suspense>
+    </>
   );
 }
 
-export default memo(Card);
+export default React.memo(Card);

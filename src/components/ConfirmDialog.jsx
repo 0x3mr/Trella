@@ -1,21 +1,27 @@
-export default function ConfirmDialog() {
+export default function ConfirmDialog({ local, server, onChoose }) {
+  if (!local || !server) return null; // prevent rendering early
+
   return (
-    <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm">
-        <h3 className="font-semibold text-lg text-slate-800">
-          Are you sure?
-        </h3>
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
+      <div className="bg-white p-4 rounded w-96">
+        <h2 className="font-bold mb-2">Conflict detected</h2>
 
-        <p className="text-sm text-slate-500 mt-2">
-          This action cannot be undone.
-        </p>
+        <div className="mb-2">
+          <h3 className="font-semibold">Local</h3>
+          <p>{local.title}</p>
+        </div>
 
-        <div className="flex justify-end gap-2 mt-6">
-          <button className="px-4 py-2 rounded-lg border border-slate-200">
-            Cancel
+        <div className="mb-4">
+          <h3 className="font-semibold">Server</h3>
+          <p>{server.title}</p>
+        </div>
+
+        <div className="flex gap-2">
+          <button onClick={() => onChoose("local")} className="btn">
+            Keep Local
           </button>
-          <button className="px-4 py-2 rounded-lg bg-gradient-to-r from-violet-600 to-fuchsia-500 text-white">
-            Confirm
+          <button onClick={() => onChoose("server")} className="btn">
+            Keep Server
           </button>
         </div>
       </div>

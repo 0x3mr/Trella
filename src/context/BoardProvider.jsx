@@ -8,7 +8,7 @@ export function BoardProvider({ children }) {
   const [state, dispatch] = useReducer(
     boardReducer,
     initialState,
-    () => loadState() || initialState
+    (init) => loadState(init)
   );
 
   useEffect(() => {

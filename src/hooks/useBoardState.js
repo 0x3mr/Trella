@@ -1,25 +1,66 @@
 import { useContext, useCallback } from "react";
 import { BoardContext } from "../context/BoardProvider";
-import { ActionTypes } from "../context/boardReducer";
-import { v4 as uuid } from "uuid";
+import { useOfflineSync } from "./useOfflineSync";
 
 export function useBoardState() {
   const { state, dispatch } = useContext(BoardContext);
+  const { enqueue } = useOfflineSync();
 
-  const addList = useCallback(
-    (title) => dispatch({ type: ActionTypes.ADD_LIST, payload: { title } }),
-    [dispatch]
-  );
+  function optimisticDispatch(action, serverPayload) {
+    dispatch(action);
+    enqueue({
+      type: action.type,
+      payload: serverPayload ?? action.payload,
+      timestamp: Date.now(),
+    });
+  }
 
-    const addCard = useCallback((listId, title) => {
-    const id = uuid();
-    dispatch({ type: ActionTypes.ADD_CARD, payload: { listId, title, id } });
-    }, [dispatch]);
+  return {
+    state,
 
-  const moveCard = useCallback((payload) => dispatch({ type: ActionTypes.MOVE_CARD, payload }), [dispatch]);
+    addList: (title) =>
+      optimisticDispatch(
+        { type: "ADD_LIST", payload: title },
+        { title }
+      ),
 
-  const undo = useCallback(() => dispatch({ type: ActionTypes.UNDO }), [dispatch]);
-  const redo = useCallback(() => dispatch({ type: ActionTypes.REDO }), [dispatch]);
+    renameList: (id, title) =>
+      optimisticDispatch(
+        { type: "RENAME_LIST", payload: { id, title } }
+      ),
 
-  return { state, addList, addCard, moveCard, undo, redo };
+    archiveList: (id) =>
+      optimisticDispatch(
+        { type: "ARCHIVE_LIST", payload: id }
+      ),
+
+    addCard: (listId, title) =>
+      optimisticDispatch(
+        { type: "ADD_CARD", payload: { listId, title } }
+      ),
+
+    updateCard: (listId, cardId, updates) =>
+      optimisticDispatch(
+        {
+          type: "UPDATE_CARD",
+          payload: { listId, cardId, updates },
+        }
+      ),
+
+    deleteCard: (listId, cardId) =>
+      optimisticDispatch(
+        {
+          type: "DELETE_CARD",
+          payload: { listId, cardId },
+        }
+      ),
+
+    moveCard: (payload) =>
+      optimisticDispatch(
+        { type: "MOVE_CARD", payload }
+      ),
+
+    undo: () => dispatch({ type: "UNDO" }),
+    redo: () => dispatch({ type: "REDO" }),
+  };
 }

@@ -1,9 +1,16 @@
-export default function InlineEditor() {
+import { useState } from "react";
+
+export default function InlineEditor({ value, onSave }) {
+  const [text, setText] = useState(value);
+
   return (
     <input
+      className="w-full border rounded px-2 py-1"
+      value={text}
+      onChange={(e) => setText(e.target.value)}
+      onBlur={() => onSave(text)}
+      onKeyDown={(e) => e.key === "Enter" && onSave(text)}
       autoFocus
-      className="w-full px-2 py-1 rounded-md border border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-300"
-      placeholder="Edit..."
     />
   );
 }

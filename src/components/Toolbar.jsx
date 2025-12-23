@@ -1,31 +1,13 @@
-import { useUndoRedo } from "../hooks/useUndoRedo";
+import { useBoardState } from "../hooks/useBoardState";
 
 export default function Toolbar() {
-  const { undo, redo, canUndo, canRedo } = useUndoRedo();
+  const { addList, undo, redo } = useBoardState();
 
   return (
-    <div className="flex items-center justify-between px-6 py-3 border-b border-slate-200 bg-white">
-      <span className="text-sm text-slate-500">
-        Kanban Board
-      </span>
-
-      <div className="flex gap-2">
-        <button
-          onClick={undo}
-          disabled={!canUndo}
-          className="px-3 py-2 rounded-lg border border-slate-200 disabled:opacity-40"
-        >
-          Undo
-        </button>
-
-        <button
-          onClick={redo}
-          disabled={!canRedo}
-          className="px-3 py-2 rounded-lg border border-slate-200 disabled:opacity-40"
-        >
-          Redo
-        </button>
-      </div>
+    <div className="p-2 flex gap-2 bg-white shadow">
+      <button onClick={() => addList("New List")}>+ List</button>
+      <button onClick={undo}>Undo</button>
+      <button onClick={redo}>Redo</button>
     </div>
   );
 }
