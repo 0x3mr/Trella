@@ -27,25 +27,44 @@ function Card({ card, listId }) {
     [listId, card.id, updateCard],
   );
 
+  const handleKeyDown = useCallback((e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      setOpen(true);
+    }
+  }, []);
+
   return (
     <>
       <div
         ref={setNodeRef}
         style={style}
         className="bg-gray-100 rounded p-2 flex gap-2"
+        role="article"
+        aria-label={`Card: ${card.title}`}
       >
         {/* Drag Handle */}
         <div
           {...attributes}
           {...listeners}
           className="cursor-grab select-none text-gray-400"
-          title="Drag"
+          title="Drag to move card"
+          aria-label={`Drag handle for ${card.title}`}
+          role="button"
+          tabIndex={0}
         >
           ☰
         </div>
 
         {/* Clickable Content */}
-        <div className="flex-1 cursor-pointer" onClick={() => setOpen(true)}>
+        <div
+          className="flex-1 cursor-pointer"
+          onClick={() => setOpen(true)}
+          onKeyDown={handleKeyDown}
+          role="button"
+          tabIndex={0}
+          aria-label={`Open details for ${card.title}`}
+        >
           <div className="font-medium">{card.title}</div>
 
           {card.description && (
@@ -60,7 +79,11 @@ function Card({ card, listId }) {
       <Suspense
         fallback={
           open && (
-            <div className="fixed inset-0 flex items-center justify-center bg-black/40 text-white">
+            <div
+              className="fixed inset-0 flex items-center justify-center bg-black/40 text-white"
+              role="alert"
+              aria-live="polite"
+            >
               Loading card details...
             </div>
           )
@@ -79,7 +102,11 @@ function Card({ card, listId }) {
       <Suspense
         fallback={
           confirm && (
-            <div className="fixed inset-0 flex items-center justify-center bg-black/40 text-white">
+            <div
+              className="fixed inset-0 flex items-center justify-center bg-black/40 text-white"
+              role="alert"
+              aria-live="polite"
+            >
               Loading confirmation...
             </div>
           )
