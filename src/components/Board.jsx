@@ -6,9 +6,7 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import {
-  sortableKeyboardCoordinates,
-} from "@dnd-kit/sortable";
+import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { useBoardState } from "../hooks/useBoardState";
 import ListColumn from "./ListColumn";
 
@@ -23,7 +21,7 @@ export default function Board() {
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   function onDragEnd({ active, over }) {
@@ -75,7 +73,7 @@ export default function Board() {
             const [listId, cardId] = active.id.split(":");
             return `Picked up card ${cardId} from list ${listId}`;
           },
-          onDragOver: ({ active, over }) => {
+          onDragOver: ({ over }) => {
             if (over) {
               return `Card is now over ${over.id}`;
             }

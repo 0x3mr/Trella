@@ -1,24 +1,27 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 
 export default function CardDetailModal({ card, onClose, onSave }) {
+  // Initialize state directly from card prop - NO useEffect needed for this
   const [title, setTitle] = useState(card?.title || "");
   const [description, setDescription] = useState(card?.description || "");
   const modalRef = useRef(null);
   const titleInputRef = useRef(null);
 
-  useEffect(() => {
-    if (card) {
-      setTitle(card.title);
-      setDescription(card.description);
-    }
-  }, [card]);
+  // Wrap handleClose in useCallback to avoid recreating on every render
+  const handleClose = useCallback(() => {
+    onSave({ title, description });
+    onClose();
+  }, [title, description, onSave, onClose]);
 
-  // Focus trap
+  // Focus on mount only
   useEffect(() => {
     if (titleInputRef.current) {
       titleInputRef.current.focus();
     }
+  }, []);
 
+  // Focus trap and keyboard handler
+  useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === "Escape") {
         handleClose();
@@ -30,7 +33,7 @@ export default function CardDetailModal({ card, onClose, onSave }) {
         if (!modal) return;
 
         const focusableElements = modal.querySelectorAll(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
         );
         const firstElement = focusableElements[0];
         const lastElement = focusableElements[focusableElements.length - 1];
@@ -47,61 +50,60 @@ export default function CardDetailModal({ card, onClose, onSave }) {
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [handleClose]);
 
   if (!card) return null;
 
-  function handleClose() {
-    onSave({ title, description });
-    onClose();
-  }
-
   return (
     <div
-      className="fixed inset-0 bg-black/40 flex justify-center items-center"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="modal-title"
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
       onClick={(e) => {
         if (e.target === e.currentTarget) handleClose();
       }}
     >
       <div
         ref={modalRef}
-        className="bg-white p-4 rounded w-96 space-y-3"
-        role="document"
+        className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl"
+        role="dialog"
+        aria-labelledby="modal-title"
+        aria-modal="true"
       >
-        <h2 id="modal-title" className="sr-only">
+        <h2 id="modal-title" className="text-xl font-bold mb-4">
           Edit Card
         </h2>
-        
-        <label htmlFor="card-title" className="sr-only">
-          Card title
-        </label>
-        <input
-          id="card-title"
-          ref={titleInputRef}
-          className="w-full border p-2 rounded"
-          data-testid="card-title-input"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          aria-label="Card title"
-          placeholder="Card title"
-        />
-
-        <label htmlFor="card-description" className="sr-only">
-          Card description
-        </label>
-        <textarea
-          id="card-description"
-          className="w-full border p-2 rounded min-h-[100px]"
-          placeholder="Description..."
-          data-testid="card-description-textarea"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          aria-label="Card description"
-        />
-
+        <div className="mb-4">
+          <label
+            htmlFor="card-title-input"
+            className="block text-sm font-medium mb-1"
+          >
+            Card title
+          </label>
+          <input
+            id="card-title-input"
+            ref={titleInputRef}
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            aria-label="Card title"
+            placeholder="Card title"
+            className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div className="mb-4">
+          <label
+            htmlFor="card-description-input"
+            className="block text-sm font-medium mb-1"
+          >
+            Card description
+          </label>
+          <textarea
+            id="card-description-input"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            aria-label="Card description"
+            className="w-full border border-gray-300 rounded px-3 py-2 h-32 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
         <div className="flex justify-end gap-2">
           <button
             data-testid="card-save-button"

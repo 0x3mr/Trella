@@ -16,4 +16,3 @@ test("user can move card between lists", async ({ page }) => {
 
   await expect(page.getByText("Task 1")).toBeVisible();
 });
-  

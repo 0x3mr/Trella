@@ -9,6 +9,7 @@ export const initialState = {
 
 // Helper to strip history/future from state before storing
 function stripHistory(state) {
+  // eslint-disable-next-line no-unused-vars
   const { history, future, ...rest } = state;
   return rest;
 }
@@ -16,12 +17,9 @@ function stripHistory(state) {
 // Helper to add to history without including nested history
 function pushHistory(prev, next) {
   const MAX_HISTORY = 20; // Limit history size
-  
-  const newHistory = [
-    ...prev.history,
-    stripHistory(prev)
-  ].slice(-MAX_HISTORY); // Keep only last 20 entries
-  
+
+  const newHistory = [...prev.history, stripHistory(prev)].slice(-MAX_HISTORY); // Keep only last 20 entries
+
   return {
     ...next,
     history: newHistory,

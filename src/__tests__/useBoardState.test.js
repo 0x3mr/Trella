@@ -36,7 +36,7 @@ test("addList dispatches and enqueues action", () => {
     expect.objectContaining({
       type: "ADD_LIST",
       payload: { title: "New List" },
-    })
+    }),
   );
 });
 
@@ -51,7 +51,7 @@ test("renameList dispatches and enqueues action", () => {
     expect.objectContaining({
       type: "RENAME_LIST",
       payload: { id: "list1", title: "Updated Title" },
-    })
+    }),
   );
 });
 
@@ -66,7 +66,7 @@ test("archiveList dispatches and enqueues action", () => {
     expect.objectContaining({
       type: "ARCHIVE_LIST",
       payload: "list1",
-    })
+    }),
   );
 });
 
@@ -81,7 +81,7 @@ test("addCard dispatches and enqueues action", () => {
     expect.objectContaining({
       type: "ADD_CARD",
       payload: { listId: "list1", title: "New Card" },
-    })
+    }),
   );
 });
 
@@ -95,8 +95,12 @@ test("updateCard dispatches and enqueues action", () => {
   expect(mockEnqueue).toHaveBeenCalledWith(
     expect.objectContaining({
       type: "UPDATE_CARD",
-      payload: { listId: "list1", cardId: "card1", updates: { title: "Updated" } },
-    })
+      payload: {
+        listId: "list1",
+        cardId: "card1",
+        updates: { title: "Updated" },
+      },
+    }),
   );
 });
 
@@ -111,7 +115,7 @@ test("deleteCard dispatches and enqueues action", () => {
     expect.objectContaining({
       type: "DELETE_CARD",
       payload: { listId: "list1", cardId: "card1" },
-    })
+    }),
   );
 });
 
@@ -133,7 +137,7 @@ test("moveCard dispatches and enqueues action", () => {
     expect.objectContaining({
       type: "MOVE_CARD",
       payload: movePayload,
-    })
+    }),
   );
 });
 

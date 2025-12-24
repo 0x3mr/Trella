@@ -116,10 +116,7 @@ test("handles sync errors gracefully", async () => {
   });
 
   await waitFor(() => {
-    expect(consoleError).toHaveBeenCalledWith(
-      "Sync failed:",
-      "Network error"
-    );
+    expect(consoleError).toHaveBeenCalledWith("Sync failed:", "Network error");
   });
 
   consoleError.mockRestore();
@@ -174,7 +171,7 @@ test("sets up online event listener", () => {
 
   expect(addEventListenerSpy).toHaveBeenCalledWith(
     "online",
-    expect.any(Function)
+    expect.any(Function),
   );
 
   addEventListenerSpy.mockRestore();
@@ -200,7 +197,7 @@ test("cleans up listeners on unmount", () => {
 
   expect(removeEventListenerSpy).toHaveBeenCalledWith(
     "online",
-    expect.any(Function)
+    expect.any(Function),
   );
   expect(clearIntervalSpy).toHaveBeenCalled();
 

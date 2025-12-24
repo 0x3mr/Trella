@@ -16,7 +16,6 @@ export function useOfflineSync(onConflict) {
 
     while (queue.length) {
       const op = queue[0];
-
       try {
         const res = await syncOperation(op);
 
@@ -52,15 +51,20 @@ export function useOfflineSync(onConflict) {
     syncingRef.current = false;
   }, [onConflict]);
 
-  // FIX: assign immediately so enqueue can safely call it
-  processQueueRef.current = processQueue;
+  // Update ref inside useEffect instead of during render
+  useEffect(() => {
+    processQueueRef.current = processQueue;
+  }, [processQueue]);
 
   useEffect(() => {
-    window.addEventListener("online", processQueueRef.current);
-    const timer = setInterval(processQueueRef.current, 30_000);
+    const onlineHandler = () => processQueueRef.current?.();
+    const syncHandler = () => processQueueRef.current?.();
+
+    window.addEventListener("online", onlineHandler);
+    const timer = setInterval(syncHandler, 30_000);
 
     return () => {
-      window.removeEventListener("online", processQueueRef.current);
+      window.removeEventListener("online", onlineHandler);
       clearInterval(timer);
     };
   }, []);
@@ -74,7 +78,7 @@ export function useOfflineSync(onConflict) {
 
     queueRef.current.push(opWithLocal);
     saveQueue(queueRef.current);
-    processQueueRef.current(); // safe now
+    processQueueRef.current?.();
   }, []);
 
   const getQueue = useCallback(() => [...queueRef.current], []);

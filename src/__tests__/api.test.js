@@ -8,7 +8,7 @@ beforeEach(() => {
   const serverState = getServerState();
   serverState.lists = [];
   serverState.cards = [];
-  
+
   // Mock Math.random to never fail (return > 0.15)
   Math.random = jest.fn(() => 0.5);
 });
@@ -64,7 +64,11 @@ test("ADD_CARD adds a card to a list", async () => {
     type: "ADD_CARD",
     payload: {
       listId: "list1",
-      card: { id: "card1", title: "Test Card", description: "Test Description" },
+      card: {
+        id: "card1",
+        title: "Test Card",
+        description: "Test Description",
+      },
     },
   });
 
