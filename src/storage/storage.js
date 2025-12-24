@@ -1,127 +1,163 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+// src/storage/storage.js
+const KEY = "kanban_board_state";
+const QUEUE_KEY = "kanban_sync_queue";
+const MAX_QUEUE_SIZE = 50; // max operations to store
+const MAX_HISTORY_SIZE = 20; // reduced from 50 to save space
 
-export default function CardDetailModal({ card, onClose, onSave }) {
-  // Initialize state directly from card prop - no useEffect needed
-  const [title, setTitle] = useState(card?.title || "");
-  const [description, setDescription] = useState(card?.description || "");
-  const modalRef = useRef(null);
-  const titleInputRef = useRef(null);
+/**
+ * Load the saved board state from localStorage.
+ * Returns `initialState` if nothing is saved or parsing fails.
+ */
+export function loadState(initialState) {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (!raw) return initialState;
+    const parsed = JSON.parse(raw);
+    return {
+      ...initialState,
+      lists: parsed.lists ?? initialState.lists,
+      // Don't restore history/future to avoid quota issues
+      history: [],
+      future: [],
+    };
+  } catch (err) {
+    console.warn("Failed to load state:", err);
+    return initialState;
+  }
+}
 
-  // Focus on mount
-  useEffect(() => {
-    if (titleInputRef.current) {
-      titleInputRef.current.focus();
-    }
-  }, []);
-
-  // Wrap handleClose in useCallback to avoid recreating on every render
-  const handleClose = useCallback(() => {
-    onSave({ title, description });
-    onClose();
-  }, [title, description, onSave, onClose]);
-
-  // Focus trap
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === "Escape") {
-        handleClose();
-      }
-
-      // Focus trap logic
-      if (e.key === "Tab") {
-        const modal = modalRef.current;
-        if (!modal) return;
-
-        const focusableElements = modal.querySelectorAll(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-        );
-        const firstElement = focusableElements[0];
-        const lastElement = focusableElements[focusableElements.length - 1];
-
-        if (e.shiftKey && document.activeElement === firstElement) {
-          e.preventDefault();
-          lastElement.focus();
-        } else if (!e.shiftKey && document.activeElement === lastElement) {
-          e.preventDefault();
-          firstElement.focus();
-        }
-      }
+/**
+ * Save the current board state to localStorage.
+ * Only saves lists, NOT history/future to avoid quota issues.
+ */
+export function saveState(state) {
+  try {
+    // Only save the essential data, exclude history and future
+    const minimalState = {
+      lists: state.lists ?? [],
     };
 
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [handleClose]);
+    const serialized = JSON.stringify(minimalState);
 
-  if (!card) return null;
+    // Check if we're approaching quota limits (5MB typical)
+    if (serialized.length > 4 * 1024 * 1024) {
+      // 4MB warning threshold
+      console.warn("State is getting large, consider data cleanup");
 
-  return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) handleClose();
-      }}
-    >
-      <div
-        ref={modalRef}
-        className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl"
-        role="dialog"
-        aria-labelledby="modal-title"
-        aria-modal="true"
-      >
-        <h2 id="modal-title" className="text-xl font-bold mb-4">
-          Edit Card
-        </h2>
-        <div className="mb-4">
-          <label
-            htmlFor="card-title-input"
-            className="block text-sm font-medium mb-1"
-          >
-            Card title
-          </label>
-          <input
-            id="card-title-input"
-            ref={titleInputRef}
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            aria-label="Card title"
-            placeholder="Card title"
-            className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-        <div className="mb-4">
-          <label
-            htmlFor="card-description-input"
-            className="block text-sm font-medium mb-1"
-          >
-            Card description
-          </label>
-          <textarea
-            id="card-description-input"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            aria-label="Card description"
-            className="w-full border border-gray-300 rounded px-3 py-2 h-32 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-        <div className="flex justify-end gap-2">
-          <button
-            data-testid="card-save-button"
-            onClick={handleClose}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            aria-label="Save card changes"
-          >
-            Save
-          </button>
-          <button
-            onClick={onClose}
-            className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
-            aria-label="Cancel and close modal"
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+      // Emergency cleanup: keep only non-archived lists with limited cards
+      const cleanedState = {
+        lists: (state.lists ?? [])
+          .filter((l) => !l.archived)
+          .map((l) => ({
+            ...l,
+            cards: l.cards.slice(-100), // Keep only last 100 cards per list
+          })),
+      };
+
+      localStorage.setItem(KEY, JSON.stringify(cleanedState));
+      return;
+    }
+
+    localStorage.setItem(KEY, serialized);
+  } catch (err) {
+    console.error("Failed to save state:", err);
+
+    // If quota exceeded, try emergency cleanup
+    if (err.name === "QuotaExceededError" || err.message.includes("quota")) {
+      try {
+        const emergencyState = {
+          lists: (state.lists ?? [])
+            .filter((l) => !l.archived)
+            .slice(-10) // Keep only last 10 lists
+            .map((l) => ({
+              ...l,
+              cards: l.cards.slice(-20), // Keep only last 20 cards per list
+            })),
+        };
+        localStorage.setItem(KEY, JSON.stringify(emergencyState));
+        console.warn("Emergency cleanup performed - some data may be lost");
+      } catch (cleanupErr) {
+        console.error("Emergency cleanup failed:", cleanupErr);
+        // Last resort: clear everything
+        localStorage.removeItem(KEY);
+      }
+    }
+  }
+}
+
+/**
+ * Load the sync queue from localStorage.
+ * Returns empty array if nothing is saved or parsing fails.
+ */
+export function loadQueue() {
+  try {
+    const raw = localStorage.getItem(QUEUE_KEY);
+    if (!raw) return [];
+    const queue = JSON.parse(raw);
+    return Array.isArray(queue) ? queue.slice(-MAX_QUEUE_SIZE) : [];
+  } catch (err) {
+    console.warn("Failed to load queue:", err);
+    return [];
+  }
+}
+
+/**
+ * Save the sync queue to localStorage.
+ * Keeps only the last `MAX_QUEUE_SIZE` operations.
+ */
+export function saveQueue(queue) {
+  try {
+    const trimmedQueue = Array.isArray(queue)
+      ? queue.slice(-MAX_QUEUE_SIZE)
+      : [];
+    localStorage.setItem(QUEUE_KEY, JSON.stringify(trimmedQueue));
+  } catch (err) {
+    console.warn("Failed to save queue:", err);
+
+    // If quota exceeded, clear old queue
+    if (err.name === "QuotaExceededError" || err.message.includes("quota")) {
+      try {
+        localStorage.removeItem(QUEUE_KEY);
+        // Try saving just the last few operations
+        const minimalQueue = trimmedQueue.slice(-10);
+        localStorage.setItem(QUEUE_KEY, JSON.stringify(minimalQueue));
+      } catch {
+        // Ignore if this also fails
+      }
+    }
+  }
+}
+
+/**
+ * Optional: Clear both state and queue. Useful for tests or dev.
+ */
+export function clearStorage() {
+  try {
+    localStorage.removeItem(KEY);
+    localStorage.removeItem(QUEUE_KEY);
+  } catch {
+    // ignore errors
+  }
+}
+
+/**
+ * Get storage usage info for debugging
+ */
+export function getStorageInfo() {
+  try {
+    const stateSize = localStorage.getItem(KEY)?.length || 0;
+    const queueSize = localStorage.getItem(QUEUE_KEY)?.length || 0;
+    const totalSize = stateSize + queueSize;
+
+    return {
+      stateSize,
+      queueSize,
+      totalSize,
+      stateSizeKB: (stateSize / 1024).toFixed(2),
+      queueSizeKB: (queueSize / 1024).toFixed(2),
+      totalSizeKB: (totalSize / 1024).toFixed(2),
+    };
+  } catch {
+    return null;
+  }
 }
