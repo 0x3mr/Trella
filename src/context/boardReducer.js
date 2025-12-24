@@ -5,8 +5,29 @@ export const initialState = {
   lists: [],
   history: [],
   future: [],
-  pendingQueue: [],
 };
+
+// Helper to strip history/future from state before storing
+function stripHistory(state) {
+  const { history, future, ...rest } = state;
+  return rest;
+}
+
+// Helper to add to history without including nested history
+function pushHistory(prev, next) {
+  const MAX_HISTORY = 20; // Limit history size
+  
+  const newHistory = [
+    ...prev.history,
+    stripHistory(prev)
+  ].slice(-MAX_HISTORY); // Keep only last 20 entries
+  
+  return {
+    ...next,
+    history: newHistory,
+    future: [],
+  };
+}
 
 export function boardReducer(state, action) {
   switch (action.type) {
@@ -165,7 +186,7 @@ export function boardReducer(state, action) {
       return {
         ...prev,
         history: state.history.slice(0, -1),
-        future: [stripHistory(state), ...state.future],
+        future: [stripHistory(state), ...state.future].slice(0, 20), // Limit future too
       };
     }
 
@@ -174,7 +195,7 @@ export function boardReducer(state, action) {
       const next = state.future[0];
       return {
         ...next,
-        history: [...state.history, stripHistory(state)],
+        history: [...state.history, stripHistory(state)].slice(-20), // Limit history
         future: state.future.slice(1),
       };
     }
@@ -182,17 +203,4 @@ export function boardReducer(state, action) {
     default:
       return state;
   }
-}
-
-function stripHistory(state) {
-  const { ...rest } = state;
-  return rest;
-}
-
-function pushHistory(prev, next) {
-  return {
-    ...next,
-    history: [...prev.history, stripHistory(prev)],
-    future: [],
-  };
 }
